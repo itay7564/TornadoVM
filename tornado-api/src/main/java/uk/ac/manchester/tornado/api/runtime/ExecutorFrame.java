@@ -17,6 +17,8 @@
  */
 package uk.ac.manchester.tornado.api.runtime;
 
+import java.util.Map;
+
 import uk.ac.manchester.tornado.api.GridScheduler;
 import uk.ac.manchester.tornado.api.enums.ProfilerMode;
 
@@ -29,16 +31,19 @@ public class ExecutorFrame {
     private GridScheduler gridScheduler;
     private ProfilerMode profilerMode;
 
+    // Per-execution argument bindings (placeholder name -> concrete object).
+    // When non-empty, runtime should use these bindings to resolve kernel args and transfers.
+    private Map<String, Object> argBindings;
+    private boolean hasOverrides;
+
     public ExecutorFrame(long id) {
         this.executionPlanId = id;
     }
-
 
     public ExecutorFrame setGridScheduler(GridScheduler gridScheduler) {
         this.gridScheduler = gridScheduler;
         return this;
     }
-
 
     public GridScheduler getGridScheduler() {
         return gridScheduler;
@@ -58,5 +63,20 @@ public class ExecutorFrame {
 
     public ProfilerMode getProfilerMode() {
         return profilerMode;
+    }
+
+    // New API for per-execution argument bindings
+    public ExecutorFrame setArgBindings(Map<String, Object> bindings) {
+        this.argBindings = bindings;
+        this.hasOverrides = bindings != null && !bindings.isEmpty();
+        return this;
+    }
+
+    public Map<String, Object> getArgBindings() {
+        return argBindings;
+    }
+
+    public boolean hasOverrides() {
+        return hasOverrides;
     }
 }
