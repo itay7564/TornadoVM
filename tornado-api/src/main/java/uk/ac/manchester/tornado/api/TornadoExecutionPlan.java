@@ -52,7 +52,6 @@ import uk.ac.manchester.tornado.api.plan.types.WithWarmUpIterations;
 import uk.ac.manchester.tornado.api.plan.types.WithWarmUpTime;
 import uk.ac.manchester.tornado.api.runtime.ExecutorFrame;
 import uk.ac.manchester.tornado.api.runtime.TornadoRuntimeProvider;
-import uk.ac.manchester.tornado.api.Args; // NEW
 
 /**
  * Class to create and optimize execution plans for running a set of
@@ -410,7 +409,7 @@ public sealed class TornadoExecutionPlan implements AutoCloseable permits Execut
      * @return {@link TornadoExecutionPlan}
      */
     public TornadoExecutionPlan withProfiler(ProfilerMode profilerMode) {
-        executionFrame setProfilerMode(profilerMode);
+        executionFrame.setProfilerMode(profilerMode);
         return new WithProfiler(this, profilerMode);
     }
 
@@ -577,7 +576,7 @@ public sealed class TornadoExecutionPlan implements AutoCloseable permits Execut
     }
 
     public TornadoExecutionResult getPlanResult(int index) {
-        if (index >= planResults size()) {
+        if (index >= planResults.size()) {
             throw new TornadoRuntimeException("[ERROR] Execution result not found");
         }
         return planResults.get(index);
