@@ -1771,9 +1771,10 @@ public class TornadoTaskGraph implements TornadoTaskGraphInterface {
             boundGraph.consumeFromDevice(consumeObjects.toArray());
         }
         
-        // Copy device assignments
-        if (this.executionContext != null && this.executionContext.getDevice() != null) {
-            boundGraph.setDevice(this.executionContext.getDevice());
+        // Copy device assignment from this graph
+        TornadoDevice device = this.getDevice();
+        if (device != null) {
+            boundGraph.setDevice(device);
         }
         
         // Execute the bound graph
