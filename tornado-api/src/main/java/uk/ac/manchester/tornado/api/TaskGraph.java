@@ -17,10 +17,16 @@
  */
 package uk.ac.manchester.tornado.api;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import uk.ac.manchester.tornado.api.common.PlaceholderRef;
 import uk.ac.manchester.tornado.api.common.PrebuiltTaskPackage;
 import uk.ac.manchester.tornado.api.common.TaskPackage;
 import uk.ac.manchester.tornado.api.common.TornadoDevice;
@@ -64,11 +70,69 @@ public class TaskGraph implements TaskGraphInterface {
     private final String taskGraphName;
     protected TornadoTaskGraphInterface taskGraphImpl;
     protected HashSet<String> taskNames;
+    private final Map<String, List<PlaceholderRef>> placeholderRegistry;
 
     public TaskGraph(String name) {
         this.taskGraphName = name;
         taskGraphImpl = TornadoAPIProvider.loadScheduleRuntime(name);
         taskNames = new HashSet<>();
+        placeholderRegistry = new HashMap<>();
+    }
+
+    /**
+     * Registers a placeholder parameter reference for a given task or transfer context.
+     *
+     * @param contextKey The context identifier (e.g., task ID or transfer type)
+     * @param param      The Param<?> placeholder instance
+     * @param index      The positional index of the parameter
+     * @param role       The role/context (e.g., "task", "transferIn", "transferOut")
+     */
+    private void registerPlaceholder(String contextKey, Param<?> param, int index, String role) {
+        PlaceholderRef ref = new PlaceholderRef(param.name(), param.type(), index, role);
+        placeholderRegistry.computeIfAbsent(contextKey, k -> new ArrayList<>()).add(ref);
+    }
+
+    /**
+     * Scans task arguments for Param<?> instances and registers them.
+     *
+     * @param taskId The task identifier
+     * @param args   The task arguments (excluding the code reference)
+     */
+    private void registerTaskPlaceholders(String taskId, Object... args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof Param) {
+                registerPlaceholder(taskId, (Param<?>) args[i], i, "task");
+            }
+        }
+    }
+
+    /**
+     * Scans transfer directive arguments for Param<?> instances and registers them.
+     *
+     * @param role    The transfer role (e.g., "transferIn", "transferOut", "consume", "persist")
+     * @param objects The objects to transfer
+     */
+    private void registerTransferPlaceholders(String role, Object... objects) {
+        for (int i = 0; i < objects.length; i++) {
+            if (objects[i] instanceof Param) {
+                String contextKey = role + "_" + ((Param<?>) objects[i]).name();
+                registerPlaceholder(contextKey, (Param<?>) objects[i], i, role);
+            }
+        }
+    }
+
+    /**
+     * Returns an immutable view of the placeholder registry.
+     * The registry maps context keys to lists of placeholder references.
+     *
+     * @return Immutable map of placeholder references
+     */
+    Map<String, List<PlaceholderRef>> getPlaceholderRegistry() {
+        Map<String, List<PlaceholderRef>> immutableRegistry = new HashMap<>();
+        for (Map.Entry<String, List<PlaceholderRef>> entry : placeholderRegistry.entrySet()) {
+            immutableRegistry.put(entry.getKey(), Collections.unmodifiableList(new ArrayList<>(entry.getValue())));
+        }
+        return Collections.unmodifiableMap(immutableRegistry);
     }
 
     /**
@@ -115,6 +179,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1> TaskGraph task(String id, Task1<T1> code, T1 arg) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -136,6 +201,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2> TaskGraph task(String id, Task2<T1, T2> code, T1 arg1, T2 arg2) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -159,6 +225,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2, T3> TaskGraph task(String id, Task3<T1, T2, T3> code, T1 arg1, T2 arg2, T3 arg3) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -184,6 +251,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2, T3, T4> TaskGraph task(String id, Task4<T1, T2, T3, T4> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -211,6 +279,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2, T3, T4, T5> TaskGraph task(String id, Task5<T1, T2, T3, T4, T5> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -240,6 +309,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2, T3, T4, T5, T6> TaskGraph task(String id, Task6<T1, T2, T3, T4, T5, T6> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -271,6 +341,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2, T3, T4, T5, T6, T7> TaskGraph task(String id, Task7<T1, T2, T3, T4, T5, T6, T7> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -304,6 +375,7 @@ public class TaskGraph implements TaskGraphInterface {
     @Override
     public <T1, T2, T3, T4, T5, T6, T7, T8> TaskGraph task(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -340,6 +412,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskGraph task(String id, Task9<T1, T2, T3, T4, T5, T6, T7, T8, T9> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8,
             T9 arg9) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -378,6 +451,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskGraph task(String id, Task10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7,
             T8 arg8, T9 arg9, T10 arg10) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -418,6 +492,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskGraph task(String id, Task11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6,
             T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -460,6 +535,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskGraph task(String id, Task12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5,
             T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -504,6 +580,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> TaskGraph task(String id, Task13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4,
             T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -550,6 +627,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> TaskGraph task(String id, Task14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> code, T1 arg1, T2 arg2, T3 arg3,
             T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -598,6 +676,7 @@ public class TaskGraph implements TaskGraphInterface {
     public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> TaskGraph task(String id, Task15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> code, T1 arg1, T2 arg2,
             T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15) {
         checkTaskName(id);
+        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
         taskGraphImpl.addTask(taskPackage);
         return this;
@@ -681,6 +760,7 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public TaskGraph transferToDevice(final int mode, Object... objects) {
+        registerTransferPlaceholders("transferIn", objects);
         taskGraphImpl.transferToDevice(mode, objects);
         return this;
     }
@@ -699,12 +779,14 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public TaskGraph consumeFromDevice(String uniqueTaskGraphName, Object... objects) {
+        registerTransferPlaceholders("consume", objects);
         taskGraphImpl.consumeFromDevice(uniqueTaskGraphName, objects);
         return this;
     }
 
     @Override
     public TaskGraph consumeFromDevice(Object... objects) {
+        registerTransferPlaceholders("consume", objects);
         taskGraphImpl.consumeFromDevice(this.taskGraphName, objects);
         return this;
     }
@@ -735,6 +817,7 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public TaskGraph transferToHost(final int mode, Object... objects) {
+        registerTransferPlaceholders("transferOut", objects);
         taskGraphImpl.transferToHost(mode, objects);
         return this;
     }
@@ -755,6 +838,7 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public TaskGraph persistOnDevice(Object... objects) {
+        registerTransferPlaceholders("persist", objects);
         taskGraphImpl.transferToHost(DataTransferMode.UNDER_DEMAND, objects);
         return this;
     }
@@ -770,6 +854,8 @@ public class TaskGraph implements TaskGraphInterface {
         TaskGraph cloneTaskGraph = new TaskGraph(this.getTaskGraphName());
         cloneTaskGraph.taskGraphImpl = this.taskGraphImpl.createImmutableTaskGraph();
         cloneTaskGraph.taskNames = this.taskNames;
+        // Copy the placeholder registry to the cloned TaskGraph
+        cloneTaskGraph.placeholderRegistry.putAll(this.placeholderRegistry);
         return new ImmutableTaskGraph(cloneTaskGraph);
     }
 

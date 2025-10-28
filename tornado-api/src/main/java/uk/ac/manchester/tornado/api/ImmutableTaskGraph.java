@@ -18,7 +18,10 @@
 package uk.ac.manchester.tornado.api;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
+import uk.ac.manchester.tornado.api.common.PlaceholderRef;
 import uk.ac.manchester.tornado.api.common.TornadoDevice;
 import uk.ac.manchester.tornado.api.enums.ProfilerMode;
 import uk.ac.manchester.tornado.api.enums.TornadoVMBackendType;
@@ -228,5 +231,15 @@ public class ImmutableTaskGraph {
 
     boolean isGridRegistered() {
         return taskGraph.isGridRegistered();
+    }
+
+    /**
+     * Returns the placeholder registry captured at snapshot time.
+     * This registry maps context keys (task IDs or transfer types) to lists of placeholder references.
+     *
+     * @return Immutable map of placeholder references
+     */
+    public Map<String, List<PlaceholderRef>> getPlaceholderRegistry() {
+        return taskGraph.getPlaceholderRegistry();
     }
 }
