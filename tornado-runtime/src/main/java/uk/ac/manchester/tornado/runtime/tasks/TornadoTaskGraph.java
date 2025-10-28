@@ -55,12 +55,14 @@ import org.graalvm.compiler.phases.util.Providers;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import uk.ac.manchester.tornado.api.GridScheduler;
 import uk.ac.manchester.tornado.api.KernelContext;
+import uk.ac.manchester.tornado.api.Param;
 import uk.ac.manchester.tornado.api.TaskGraph;
 import uk.ac.manchester.tornado.api.TornadoBackend;
 import uk.ac.manchester.tornado.api.TornadoRuntime;
 import uk.ac.manchester.tornado.api.TornadoTaskGraphInterface;
 import uk.ac.manchester.tornado.api.common.Access;
 import uk.ac.manchester.tornado.api.common.Event;
+import uk.ac.manchester.tornado.api.common.PlaceholderRef;
 import uk.ac.manchester.tornado.api.common.PrebuiltTaskPackage;
 import uk.ac.manchester.tornado.api.common.SchedulableTask;
 import uk.ac.manchester.tornado.api.common.TaskPackage;
@@ -181,6 +183,9 @@ public class TornadoTaskGraph implements TornadoTaskGraphInterface {
     private long executionPlanId;
     private boolean bailout;
     private Access[] accesses;
+
+    // Placeholder schema captured at snapshot time from the TaskGraph
+    private Map<String, List<PlaceholderRef>> placeholderSchema;
 
     /**
      * Task Schedule implementation that uses GPU/FPGA and multicore backends. This constructor must be public. It is invoked using the reflection API.
@@ -507,6 +512,11 @@ public class TornadoTaskGraph implements TornadoTaskGraphInterface {
     @Override
     public void setLastExecutedTaskGraph(TornadoTaskGraphInterface lastExecutedTaskGraph) {
         this.lastExecutedTaskGraph = lastExecutedTaskGraph;
+    }
+
+    @Override
+    public void setPlaceholderSchema(Map<String, List<PlaceholderRef>> schema) {
+        this.placeholderSchema = schema;
     }
 
     @Override
@@ -1619,10 +1629,167 @@ public class TornadoTaskGraph implements TornadoTaskGraphInterface {
         }
     }
 
+    /**
+     * Execute with runtime bindings for placeholders.
+     * Builds a temporary, per-invocation bound TornadoTaskGraph without mutating shared state.
+     */
+    private TornadoTaskGraphInterface executeWithBindings(ExecutorFrame executorFrame) {
+        Map<String, Object> bindings = executorFrame.getArgBindings();
+        
+        // Create a temporary bound task graph for this invocation
+        TornadoTaskGraph boundGraph = new TornadoTaskGraph(this.taskGraphName + "_bound_" + System.nanoTime());
+        
+        // Copy configuration from this graph
+        boundGraph.executionPlanId = this.executionPlanId;
+        boundGraph.gridScheduler = this.gridScheduler;
+        boundGraph.profilerMode = this.profilerMode;
+        boundGraph.isConcurrentDevicesEnabled = this.isConcurrentDevicesEnabled;
+        
+        // Track objects for transfers
+        Set<Object> transferInObjects = new HashSet<>();
+        Set<Object> transferOutObjects = new HashSet<>();
+        Set<Object> consumeObjects = new HashSet<>();
+        
+        // Process each task and bind its arguments
+        for (TaskPackage originalTaskPackage : this.taskPackages) {
+            String taskId = originalTaskPackage.getId();
+            List<PlaceholderRef> taskPlaceholders = placeholderSchema.get(taskId);
+            
+            if (taskPlaceholders != null && !taskPlaceholders.isEmpty()) {
+                // Build bound arguments array
+                Object[] originalParams = originalTaskPackage.getTaskParameters();
+                Object[] boundParams = new Object[originalParams.length];
+                
+                // Copy task lambda (first element)
+                boundParams[0] = originalParams[0];
+                
+                // Bind parameters using schema
+                for (int i = 1; i < originalParams.length; i++) {
+                    Object param = originalParams[i];
+                    if (param instanceof Param<?>) {
+                        Param<?> placeholder = (Param<?>) param;
+                        String paramName = placeholder.name();
+                        
+                        // Get bound value
+                        if (!bindings.containsKey(paramName)) {
+                            throw new TornadoRuntimeException("Missing binding for placeholder: " + paramName);
+                        }
+                        
+                        Object boundValue = bindings.get(paramName);
+                        
+                        // Type check
+                        if (boundValue != null && !placeholder.type().isInstance(boundValue)) {
+                            throw new TornadoRuntimeException(
+                                "Type mismatch for placeholder '" + paramName + "': expected " + 
+                                placeholder.type().getName() + " but got " + boundValue.getClass().getName()
+                            );
+                        }
+                        
+                        boundParams[i] = boundValue;
+                    } else {
+                        // Concrete parameter, copy as-is
+                        boundParams[i] = param;
+                    }
+                }
+                
+                // Create bound task package
+                TaskPackage boundPackage = new TaskPackage(
+                    taskId,
+                    originalTaskPackage.getTaskName(),
+                    originalTaskPackage.getTask(),
+                    originalTaskPackage.getTaskType(),
+                    boundParams,
+                    originalTaskPackage.getAccesses(),
+                    originalTaskPackage.getAccessMode()
+                );
+                
+                boundGraph.addTask(boundPackage);
+            } else {
+                // No placeholders, copy task as-is
+                boundGraph.addTask(originalTaskPackage);
+            }
+        }
+        
+        // Process transfer directives from schema
+        for (Map.Entry<String, List<PlaceholderRef>> entry : placeholderSchema.entrySet()) {
+            String key = entry.getKey();
+            List<PlaceholderRef> refs = entry.getValue();
+            
+            for (PlaceholderRef ref : refs) {
+                String role = ref.getRole();
+                String paramName = ref.getName();
+                
+                // Skip task placeholders (already handled above)
+                if (role.equals("task")) {
+                    continue;
+                }
+                
+                // Get bound value
+                if (!bindings.containsKey(paramName)) {
+                    throw new TornadoRuntimeException("Missing binding for placeholder: " + paramName);
+                }
+                
+                Object boundValue = bindings.get(paramName);
+                
+                // Type check
+                if (boundValue != null && !ref.getType().isInstance(boundValue)) {
+                    throw new TornadoRuntimeException(
+                        "Type mismatch for placeholder '" + paramName + "': expected " + 
+                        ref.getType().getName() + " but got " + boundValue.getClass().getName()
+                    );
+                }
+                
+                // Collect objects for appropriate transfer directive
+                switch (role) {
+                    case "transferIn":
+                        transferInObjects.add(boundValue);
+                        break;
+                    case "transferOut":
+                        transferOutObjects.add(boundValue);
+                        break;
+                    case "consume":
+                        consumeObjects.add(boundValue);
+                        break;
+                    case "persist":
+                        // Persist is handled via transferToHost with UNDER_DEMAND mode
+                        // This is already represented in the original graph's outputModeObjects
+                        break;
+                }
+            }
+        }
+        
+        // Apply transfer directives to bound graph
+        if (!transferInObjects.isEmpty()) {
+            boundGraph.transferToDevice(DataTransferMode.EVERY_EXECUTION, transferInObjects.toArray());
+        }
+        
+        if (!transferOutObjects.isEmpty()) {
+            boundGraph.transferToHost(DataTransferMode.EVERY_EXECUTION, transferOutObjects.toArray());
+        }
+        
+        if (!consumeObjects.isEmpty()) {
+            boundGraph.consumeFromDevice(consumeObjects.toArray());
+        }
+        
+        // Copy device assignments
+        if (this.executionContext != null && this.executionContext.getDevice() != null) {
+            boundGraph.setDevice(this.executionContext.getDevice());
+        }
+        
+        // Execute the bound graph
+        return boundGraph.execute();
+    }
+
     @Override
     public TornadoTaskGraphInterface execute(ExecutorFrame executorFrame) {
         executionPlanId = executorFrame.getExecutionPlanId();
         checkProfilerOn(executorFrame);
+        
+        // Phase 3: Runtime binding with re-entrancy support
+        if (executorFrame.hasOverrides() && placeholderSchema != null && !placeholderSchema.isEmpty()) {
+            return executeWithBindings(executorFrame);
+        }
+        
         return execute();
 
     }

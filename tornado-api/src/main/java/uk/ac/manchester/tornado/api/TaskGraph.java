@@ -856,6 +856,12 @@ public class TaskGraph implements TaskGraphInterface {
         cloneTaskGraph.taskNames = this.taskNames;
         // Copy the placeholder registry to the cloned TaskGraph
         cloneTaskGraph.placeholderRegistry.putAll(this.placeholderRegistry);
+        
+        // Phase 3: Transfer placeholder schema to runtime TornadoTaskGraph
+        if (!this.placeholderRegistry.isEmpty()) {
+            cloneTaskGraph.taskGraphImpl.setPlaceholderSchema(this.getPlaceholderRegistry());
+        }
+        
         return new ImmutableTaskGraph(cloneTaskGraph);
     }
 
