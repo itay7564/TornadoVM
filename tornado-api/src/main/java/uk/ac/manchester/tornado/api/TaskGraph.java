@@ -178,22 +178,18 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1> TaskGraph task(String id, Task1<T1> code, T1 arg) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
+        return task(id, code, Param.defaultParam(arg));
     }
-
+    
     /**
-     * Adds task with one parameter (placeholder version).
+     * Adds task with one parameter (Param version).
      *
      * @param id
      *     Task-id
      * @param code
      *     Reference to an existing Java method with one argument
      * @param arg
-     *     Placeholder argument to the method
+     *     Argument to the method (Param or concrete value wrapped in Param)
      * @return {@link TaskGraph}
      */
     @Override
@@ -220,29 +216,14 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2> TaskGraph task(String id, Task2<T1, T2> code, T1 arg1, T2 arg2) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2));
     }
-
+    
     /**
-     * Adds task with two parameters (placeholder version).
-     * Supports any combination of concrete values and Param placeholders.
-     *
-     * @param id
-     *     Task-id
-     * @param code
-     *     Reference to an existing Java method with two arguments
-     * @param arg1
-     *     Argument 1 to the method (Param or concrete)
-     * @param arg2
-     *     Argument 2 to the method (Param or concrete)
-     * @return {@link TaskGraph}
+     * Adds task with two parameters (Param version).
      */
     @Override
-    public <T1, T2> TaskGraph task(String id, Task2<T1, T2> code, Object arg1, Object arg2) {
+    public <T1, T2> TaskGraph task(String id, Task2<T1, T2> code, Param<T1> arg1, Param<T2> arg2) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2);
@@ -267,31 +248,14 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2, T3> TaskGraph task(String id, Task3<T1, T2, T3> code, T1 arg1, T2 arg2, T3 arg3) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2), Param.defaultParam(arg3));
     }
-
+    
     /**
-     * Add task with three parameters (placeholder version).
-     * Supports any combination of concrete values and Param placeholders.
-     *
-     * @param id
-     *     Task-id
-     * @param code
-     *     Reference to an existing Java method with three arguments
-     * @param arg1
-     *     Argument 1 to the method (Param or concrete)
-     * @param arg2
-     *     Argument 2 to the method (Param or concrete)
-     * @param arg3
-     *     Argument 3 to the method (Param or concrete)
-     * @return {@link TaskGraph}
+     * Add task with three parameters (Param version).
      */
     @Override
-    public <T1, T2, T3> TaskGraph task(String id, Task3<T1, T2, T3> code, Object arg1, Object arg2, Object arg3) {
+    public <T1, T2, T3> TaskGraph task(String id, Task3<T1, T2, T3> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2, arg3);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3);
@@ -318,18 +282,12 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2, T3, T4> TaskGraph task(String id, Task4<T1, T2, T3, T4> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2), Param.defaultParam(arg3), Param.defaultParam(arg4));
     }
 
-    /**
-     * Adds task with four parameters (placeholder version).
-     */
+    /** Adds task with 4 parameters (Param version). */
     @Override
-    public <T1, T2, T3, T4> TaskGraph task(String id, Task4<T1, T2, T3, T4> code, Object arg1, Object arg2, Object arg3, Object arg4) {
+    public <T1, T2, T3, T4> TaskGraph task(String id, Task4<T1, T2, T3, T4> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2, arg3, arg4);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4);
@@ -358,6 +316,12 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2, T3, T4, T5> TaskGraph task(String id, Task5<T1, T2, T3, T4, T5> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) {
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2), Param.defaultParam(arg3), Param.defaultParam(arg4), Param.defaultParam(arg5));
+    }
+
+    /** Adds task with 5 parameters (Param version). */
+    @Override
+    public <T1, T2, T3, T4, T5> TaskGraph task(String id, Task5<T1, T2, T3, T4, T5> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5);
@@ -388,6 +352,12 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2, T3, T4, T5, T6> TaskGraph task(String id, Task6<T1, T2, T3, T4, T5, T6> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6) {
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2), Param.defaultParam(arg3), Param.defaultParam(arg4), Param.defaultParam(arg5), Param.defaultParam(arg6));
+    }
+
+    /** Adds task with 6 parameters (Param version). */
+    @Override
+    public <T1, T2, T3, T4, T5, T6> TaskGraph task(String id, Task6<T1, T2, T3, T4, T5, T6> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6);
@@ -420,6 +390,12 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2, T3, T4, T5, T6, T7> TaskGraph task(String id, Task7<T1, T2, T3, T4, T5, T6, T7> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7) {
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2), Param.defaultParam(arg3), Param.defaultParam(arg4), Param.defaultParam(arg5), Param.defaultParam(arg6), Param.defaultParam(arg7));
+    }
+
+    /** Adds task with 7 parameters (Param version). */
+    @Override
+    public <T1, T2, T3, T4, T5, T6, T7> TaskGraph task(String id, Task7<T1, T2, T3, T4, T5, T6, T7> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
@@ -454,6 +430,12 @@ public class TaskGraph implements TaskGraphInterface {
      */
     @Override
     public <T1, T2, T3, T4, T5, T6, T7, T8> TaskGraph task(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8) {
+        return task(id, code, Param.defaultParam(arg1), Param.defaultParam(arg2), Param.defaultParam(arg3), Param.defaultParam(arg4), Param.defaultParam(arg5), Param.defaultParam(arg6), Param.defaultParam(arg7), Param.defaultParam(arg8));
+    }
+
+    /** Adds task with 8 parameters (Param version). */
+    @Override
+    public <T1, T2, T3, T4, T5, T6, T7, T8> TaskGraph task(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8) {
         checkTaskName(id);
         registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
         TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
@@ -1137,118 +1119,6 @@ public class TaskGraph implements TaskGraphInterface {
 
     public boolean isGridRegistered() {
         return taskGraphImpl.isGridRegistered();
-    }
-
-    // ========== Placeholder-supporting overloads for Task5-Task15 ==========
-
-    /** Adds task with five parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5> TaskGraph task(String id, Task5<T1, T2, T3, T4, T5> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with six parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6> TaskGraph task(String id, Task6<T1, T2, T3, T4, T5, T6> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with seven parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7> TaskGraph task(String id, Task7<T1, T2, T3, T4, T5, T6, T7> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with eight parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8> TaskGraph task(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with nine parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskGraph task(String id, Task9<T1, T2, T3, T4, T5, T6, T7, T8, T9> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with ten parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskGraph task(String id, Task10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with eleven parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskGraph task(String id, Task11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with twelve parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskGraph task(String id, Task12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with thirteen parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> TaskGraph task(String id, Task13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with fourteen parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> TaskGraph task(String id, Task14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13, Object arg14) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
-    }
-
-    /** Adds task with fifteen parameters (placeholder version). */
-    @Override
-    public <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> TaskGraph task(String id, Task15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> code, Object arg1, Object arg2, Object arg3, Object arg4, Object arg5, Object arg6, Object arg7, Object arg8, Object arg9, Object arg10, Object arg11, Object arg12, Object arg13, Object arg14, Object arg15) {
-        checkTaskName(id);
-        registerTaskPlaceholders(id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-        TaskPackage taskPackage = TaskPackage.createPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15);
-        taskGraphImpl.addTask(taskPackage);
-        return this;
     }
 
 }
