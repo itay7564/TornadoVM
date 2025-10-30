@@ -59,18 +59,6 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         }
     }
 
-    public static void vectorMul(FloatArray a, FloatArray b, FloatArray c) {
-        for (@Parallel int i = 0; i < a.getSize(); i++) {
-            c.set(i, a.get(i) * b.get(i));
-        }
-    }
-
-    public static void scalarAdd(IntArray a, int scalar, IntArray b) {
-        for (@Parallel int i = 0; i < a.getSize(); i++) {
-            b.set(i, a.get(i) + scalar);
-        }
-    }
-
     @Test
     public void testBasicRuntimeBinding() {
         final int size = 256;
@@ -305,42 +293,50 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         // Arrays for first execution
         IntArray a1 = new IntArray(size);
         IntArray b1 = new IntArray(size);
+        IntArray temp1 = new IntArray(size);
         a1.init(1);
-        b1.init(2);
 
         // Arrays for second execution
         IntArray a2 = new IntArray(size);
         IntArray b2 = new IntArray(size);
+        IntArray temp2 = new IntArray(size);
         a2.init(10);
-        b2.init(20);
 
-        // Create TaskGraph with two tasks
+        // Create TaskGraph with two tasks using vectorAdd instead of scalarAdd
         TaskGraph taskGraph = new TaskGraph("tg6") //
-                .task("t0", TestPlaceholderRuntimeBinding::scalarAdd, //
+                .task("t0", TestPlaceholderRuntimeBinding::vectorAdd, //
                         Param.in("input", IntArray.class), //
-                        5, // constant scalar
+                        Param.in("constant", IntArray.class), //
                         Param.out("temp", IntArray.class)) //
-                .task("t1", TestPlaceholderRuntimeBinding::scalarAdd, //
+                .task("t1", TestPlaceholderRuntimeBinding::vectorAdd, //
                         Param.in("temp", IntArray.class), //
-                        10, // constant scalar
+                        Param.in("constant2", IntArray.class), //
                         Param.out("output", IntArray.class)) //
                 .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("output", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
 
-        // First execution: input=a1(1), temp=b1, output=a1 => result: 1+5+10=16
-        executionPlan.execute(Args.of("input", a1).and("temp", b1).and("output", a1).build());
+        // Create constant arrays
+        IntArray const5 = new IntArray(size);
+        IntArray const10 = new IntArray(size);
+        const5.init(5);
+        const10.init(10);
+
+        // First execution: input=a1(1), temp=temp1, output=b1 => result: (1+5)+10=16
+        executionPlan.execute(Args.of("input", a1).and("constant", const5).and("temp", temp1)
+                .and("constant2", const10).and("output", b1).build());
 
         for (int i = 0; i < size; i++) {
-            assertEquals("a1[" + i + "] should be 16", 16, a1.get(i));
+            assertEquals("b1[" + i + "] should be 16", 16, b1.get(i));
         }
 
-        // Second execution: input=a2(10), temp=b2, output=a2 => result: 10+5+10=25
-        executionPlan.execute(Args.of("input", a2).and("temp", b2).and("output", a2).build());
+        // Second execution: input=a2(10), temp=temp2, output=b2 => result: (10+5)+10=25
+        executionPlan.execute(Args.of("input", a2).and("constant", const5).and("temp", temp2)
+                .and("constant2", const10).and("output", b2).build());
 
         for (int i = 0; i < size; i++) {
-            assertEquals("a2[" + i + "] should be 25", 25, a2.get(i));
+            assertEquals("b2[" + i + "] should be 25", 25, b2.get(i));
         }
     }
 }
