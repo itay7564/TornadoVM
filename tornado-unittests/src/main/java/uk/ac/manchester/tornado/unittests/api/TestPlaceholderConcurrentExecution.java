@@ -33,6 +33,7 @@ import uk.ac.manchester.tornado.api.TaskGraph;
 import uk.ac.manchester.tornado.api.TornadoExecutionPlan;
 import uk.ac.manchester.tornado.api.annotations.Parallel;
 import uk.ac.manchester.tornado.api.enums.DataTransferMode;
+import uk.ac.manchester.tornado.api.types.arrays.IntArray;
 import uk.ac.manchester.tornado.unittests.common.TornadoTestBase;
 
 /**
@@ -50,9 +51,9 @@ import uk.ac.manchester.tornado.unittests.common.TornadoTestBase;
 public class TestPlaceholderConcurrentExecution extends TornadoTestBase {
 
     // Simple kernel for testing
-    public static void vectorAdd(int[] a, int[] b, int[] c) {
-        for (@Parallel int i = 0; i < a.length; i++) {
-            c[i] = a[i] + b[i];
+    public static void vectorAdd(IntArray a, IntArray b, IntArray c) {
+        for (@Parallel int i = 0; i < a.getSize(); i++) {
+            c.set(i, a.get(i) + b.get(i));
         }
     }
 
@@ -64,10 +65,10 @@ public class TestPlaceholderConcurrentExecution extends TornadoTestBase {
         // Create shared ImmutableTaskGraph with placeholders
         TaskGraph taskGraph = new TaskGraph("tg_concurrent") //
                 .task("t0", TestPlaceholderConcurrentExecution::vectorAdd, //
-                        Param.in("arrayA", int[].class), //
-                        Param.in("arrayB", int[].class), //
-                        Param.out("arrayC", int[].class)) //
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", int[].class));
+                        Param.in("arrayA", IntArray.class), //
+                        Param.in("arrayB", IntArray.class), //
+                        Param.out("arrayC", IntArray.class)) //
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -88,11 +89,11 @@ public class TestPlaceholderConcurrentExecution extends TornadoTestBase {
             threads[t] = new Thread(() -> {
                 try {
                     // Create thread-local arrays
-                    int[] a = new int[size];
-                    int[] b = new int[size];
-                    int[] c = new int[size];
-                    Arrays.fill(a, valueA);
-                    Arrays.fill(b, valueB);
+                    IntArray a = new IntArray(size);
+                    IntArray b = new IntArray(size);
+                    IntArray c = new IntArray(size);
+                    a.init(valueA);
+                    b.init(valueB);
 
                     // Wait for all threads to be ready
                     startLatch.await();
@@ -108,8 +109,8 @@ public class TestPlaceholderConcurrentExecution extends TornadoTestBase {
                     // Verify results
                     boolean allCorrect = true;
                     for (int i = 0; i < size; i++) {
-                        if (c[i] != expectedResult) {
-                            System.err.println("Thread " + threadId + " failed: c[" + i + "] = " + c[i] + ", expected " + expectedResult);
+                        if (c.get(i) != expectedResult) {
+                            System.err.println("Thread " + threadId + " failed: c[" + i + "] = " + c.get(i) + ", expected " + expectedResult);
                             allCorrect = false;
                             break;
                         }
@@ -145,53 +146,53 @@ public class TestPlaceholderConcurrentExecution extends TornadoTestBase {
         // Create TaskGraph with placeholders
         TaskGraph taskGraph = new TaskGraph("tg_sequential") //
                 .task("t0", TestPlaceholderConcurrentExecution::vectorAdd, //
-                        Param.in("arrayA", int[].class), //
-                        Param.in("arrayB", int[].class), //
-                        Param.out("arrayC", int[].class)) //
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", int[].class));
+                        Param.in("arrayA", IntArray.class), //
+                        Param.in("arrayB", IntArray.class), //
+                        Param.out("arrayC", IntArray.class)) //
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
 
         // First execution
-        int[] a1 = new int[size];
-        int[] b1 = new int[size];
-        int[] c1 = new int[size];
-        Arrays.fill(a1, 1);
-        Arrays.fill(b1, 2);
+        IntArray a1 = new IntArray(size);
+        IntArray b1 = new IntArray(size);
+        IntArray c1 = new IntArray(size);
+        a1.init(1);
+        b1.init(2);
 
         executionPlan.execute(Args.of("arrayA", a1).and("arrayB", b1).and("arrayC", c1).build());
 
         // Verify first execution
         for (int i = 0; i < size; i++) {
-            assertEquals("First execution: c1[" + i + "] should be 3", 3, c1[i]);
+            assertEquals("First execution: c1[" + i + "] should be 3", 3, c1.get(i));
         }
 
         // Second execution with different inputs
-        int[] a2 = new int[size];
-        int[] b2 = new int[size];
-        int[] c2 = new int[size];
-        Arrays.fill(a2, 10);
-        Arrays.fill(b2, 20);
+        IntArray a2 = new IntArray(size);
+        IntArray b2 = new IntArray(size);
+        IntArray c2 = new IntArray(size);
+        a2.init(10);
+        b2.init(20);
 
         executionPlan.execute(Args.of("arrayA", a2).and("arrayB", b2).and("arrayC", c2).build());
 
         // Verify second execution
         for (int i = 0; i < size; i++) {
-            assertEquals("Second execution: c2[" + i + "] should be 30", 30, c2[i]);
+            assertEquals("Second execution: c2[" + i + "] should be 30", 30, c2.get(i));
         }
 
         // Third execution - verify first execution results are unchanged (no interference)
         for (int i = 0; i < size; i++) {
-            assertEquals("First execution results unchanged: c1[" + i + "] should still be 3", 3, c1[i]);
+            assertEquals("First execution results unchanged: c1[" + i + "] should still be 3", 3, c1.get(i));
         }
 
         // Fourth execution with first inputs again to verify idempotency
-        int[] c1_again = new int[size];
+        IntArray c1_again = new IntArray(size);
         executionPlan.execute(Args.of("arrayA", a1).and("arrayB", b1).and("arrayC", c1_again).build());
 
         for (int i = 0; i < size; i++) {
-            assertEquals("Re-execution with same inputs: c1_again[" + i + "] should be 3", 3, c1_again[i]);
+            assertEquals("Re-execution with same inputs: c1_again[" + i + "] should be 3", 3, c1_again.get(i));
         }
     }
 
@@ -203,31 +204,31 @@ public class TestPlaceholderConcurrentExecution extends TornadoTestBase {
         // Create TaskGraph with placeholders
         TaskGraph taskGraph = new TaskGraph("tg_rapid") //
                 .task("t0", TestPlaceholderConcurrentExecution::vectorAdd, //
-                        Param.in("arrayA", int[].class), //
-                        Param.in("arrayB", int[].class), //
-                        Param.out("arrayC", int[].class)) //
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", int[].class));
+                        Param.in("arrayA", IntArray.class), //
+                        Param.in("arrayB", IntArray.class), //
+                        Param.out("arrayC", IntArray.class)) //
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
 
         // Execute many times rapidly with different inputs each time
         for (int exec = 0; exec < numExecutions; exec++) {
-            int[] a = new int[size];
-            int[] b = new int[size];
-            int[] c = new int[size];
+            IntArray a = new IntArray(size);
+            IntArray b = new IntArray(size);
+            IntArray c = new IntArray(size);
             
             int valueA = exec;
             int valueB = exec * 2;
-            Arrays.fill(a, valueA);
-            Arrays.fill(b, valueB);
+            a.init(valueA);
+            b.init(valueB);
 
             executionPlan.execute(Args.of("arrayA", a).and("arrayB", b).and("arrayC", c).build());
 
             // Verify results
             int expected = valueA + valueB;
             for (int i = 0; i < size; i++) {
-                assertEquals("Execution " + exec + ": c[" + i + "] should be " + expected, expected, c[i]);
+                assertEquals("Execution " + exec + ": c[" + i + "] should be " + expected, expected, c.get(i));
             }
         }
     }

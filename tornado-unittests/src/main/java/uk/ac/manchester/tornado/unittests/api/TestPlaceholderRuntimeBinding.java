@@ -35,6 +35,8 @@ import uk.ac.manchester.tornado.api.TornadoExecutionPlan;
 import uk.ac.manchester.tornado.api.annotations.Parallel;
 import uk.ac.manchester.tornado.api.enums.DataTransferMode;
 import uk.ac.manchester.tornado.api.exceptions.TornadoRuntimeException;
+import uk.ac.manchester.tornado.api.types.arrays.FloatArray;
+import uk.ac.manchester.tornado.api.types.arrays.IntArray;
 import uk.ac.manchester.tornado.unittests.common.TornadoTestBase;
 
 /**
@@ -51,21 +53,21 @@ import uk.ac.manchester.tornado.unittests.common.TornadoTestBase;
 public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
     // Simple kernel for testing
-    public static void vectorAdd(int[] a, int[] b, int[] c) {
-        for (@Parallel int i = 0; i < a.length; i++) {
-            c[i] = a[i] + b[i];
+    public static void vectorAdd(IntArray a, IntArray b, IntArray c) {
+        for (@Parallel int i = 0; i < a.getSize(); i++) {
+            c.set(i, a.get(i) + b.get(i));
         }
     }
 
-    public static void vectorMul(float[] a, float[] b, float[] c) {
-        for (@Parallel int i = 0; i < a.length; i++) {
-            c[i] = a[i] * b[i];
+    public static void vectorMul(FloatArray a, FloatArray b, FloatArray c) {
+        for (@Parallel int i = 0; i < a.getSize(); i++) {
+            c.set(i, a.get(i) * b.get(i));
         }
     }
 
-    public static void scalarAdd(int[] a, int scalar, int[] b) {
-        for (@Parallel int i = 0; i < a.length; i++) {
-            b[i] = a[i] + scalar;
+    public static void scalarAdd(IntArray a, int scalar, IntArray b) {
+        for (@Parallel int i = 0; i < a.getSize(); i++) {
+            b.set(i, a.get(i) + scalar);
         }
     }
 
@@ -74,26 +76,26 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         final int size = 256;
 
         // Create arrays for first execution
-        int[] a1 = new int[size];
-        int[] b1 = new int[size];
-        int[] c1 = new int[size];
-        Arrays.fill(a1, 1);
-        Arrays.fill(b1, 2);
+        IntArray a1 = new IntArray(size);
+        IntArray b1 = new IntArray(size);
+        IntArray c1 = new IntArray(size);
+        a1.init(1);
+        b1.init(2);
 
         // Create arrays for second execution
-        int[] a2 = new int[size];
-        int[] b2 = new int[size];
-        int[] c2 = new int[size];
-        Arrays.fill(a2, 10);
-        Arrays.fill(b2, 20);
+        IntArray a2 = new IntArray(size);
+        IntArray b2 = new IntArray(size);
+        IntArray c2 = new IntArray(size);
+        a2.init(10);
+        b2.init(20);
 
         // Create TaskGraph with placeholders
         TaskGraph taskGraph = new TaskGraph("tg0") //
                 .task("t0", TestPlaceholderRuntimeBinding::vectorAdd, //
-                        Param.in("arrayA", int[].class), //
-                        Param.in("arrayB", int[].class), //
-                        Param.out("arrayC", int[].class)) //
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", int[].class));
+                        Param.in("arrayA", IntArray.class), //
+                        Param.in("arrayB", IntArray.class), //
+                        Param.out("arrayC", IntArray.class)) //
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -103,7 +105,7 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify first execution results
         for (int i = 0; i < size; i++) {
-            assertEquals("c1[" + i + "] should be 3", 3, c1[i]);
+            assertEquals("c1[" + i + "] should be 3", 3, c1.get(i));
         }
 
         // Second execution with a2, b2, c2 (different inputs)
@@ -111,28 +113,28 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify second execution results
         for (int i = 0; i < size; i++) {
-            assertEquals("c2[" + i + "] should be 30", 30, c2[i]);
+            assertEquals("c2[" + i + "] should be 30", 30, c2.get(i));
         }
 
         // Verify first arrays are unchanged (thread safety)
         for (int i = 0; i < size; i++) {
-            assertEquals("c1[" + i + "] should still be 3", 3, c1[i]);
+            assertEquals("c1[" + i + "] should still be 3", 3, c1.get(i));
         }
     }
 
     @Test
     public void testTypeChecking() {
         final int size = 256;
-        int[] a = new int[size];
-        float[] b = new float[size]; // Wrong type!
-        int[] c = new int[size];
+        IntArray a = new IntArray(size);
+        FloatArray b = new FloatArray(size); // Wrong type!
+        IntArray c = new IntArray(size);
 
-        // Create TaskGraph expecting int[] for all parameters
+        // Create TaskGraph expecting IntArray for all parameters
         TaskGraph taskGraph = new TaskGraph("tg1") //
                 .task("t0", TestPlaceholderRuntimeBinding::vectorAdd, //
-                        Param.in("arrayA", int[].class), //
-                        Param.in("arrayB", int[].class), //
-                        Param.out("arrayC", int[].class));
+                        Param.in("arrayA", IntArray.class), //
+                        Param.in("arrayB", IntArray.class), //
+                        Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -151,15 +153,15 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
     @Test
     public void testMissingBinding() {
         final int size = 256;
-        int[] a = new int[size];
-        int[] b = new int[size];
+        IntArray a = new IntArray(size);
+        IntArray b = new IntArray(size);
 
         // Create TaskGraph with placeholders
         TaskGraph taskGraph = new TaskGraph("tg2") //
                 .task("t0", TestPlaceholderRuntimeBinding::vectorAdd, //
-                        Param.in("arrayA", int[].class), //
-                        Param.in("arrayB", int[].class), //
-                        Param.out("arrayC", int[].class));
+                        Param.in("arrayA", IntArray.class), //
+                        Param.in("arrayB", IntArray.class), //
+                        Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -179,25 +181,25 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         final int size = 256;
 
         // Concrete array (fixed for all executions)
-        int[] fixedA = new int[size];
-        Arrays.fill(fixedA, 5);
+        IntArray fixedA = new IntArray(size);
+        fixedA.init(5);
 
         // Placeholder arrays (change per execution)
-        int[] b1 = new int[size];
-        int[] c1 = new int[size];
-        Arrays.fill(b1, 10);
+        IntArray b1 = new IntArray(size);
+        IntArray c1 = new IntArray(size);
+        b1.init(10);
 
-        int[] b2 = new int[size];
-        int[] c2 = new int[size];
-        Arrays.fill(b2, 20);
+        IntArray b2 = new IntArray(size);
+        IntArray c2 = new IntArray(size);
+        b2.init(20);
 
         // Create TaskGraph with mixed concrete and placeholder
         TaskGraph taskGraph = new TaskGraph("tg3") //
                 .task("t0", TestPlaceholderRuntimeBinding::vectorAdd, //
                         fixedA, // concrete parameter
-                        Param.in("arrayB", int[].class), // placeholder
-                        Param.out("arrayC", int[].class)) // placeholder
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", int[].class));
+                        Param.in("arrayB", IntArray.class), // placeholder
+                        Param.out("arrayC", IntArray.class)) // placeholder
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("arrayC", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -207,7 +209,7 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify: 5 + 10 = 15
         for (int i = 0; i < size; i++) {
-            assertEquals("c1[" + i + "] should be 15", 15, c1[i]);
+            assertEquals("c1[" + i + "] should be 15", 15, c1.get(i));
         }
 
         // Second execution with b2, c2
@@ -215,7 +217,7 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify: 5 + 20 = 25
         for (int i = 0; i < size; i++) {
-            assertEquals("c2[" + i + "] should be 25", 25, c2[i]);
+            assertEquals("c2[" + i + "] should be 25", 25, c2.get(i));
         }
     }
 
@@ -224,11 +226,11 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         final int size = 256;
 
         // Create arrays
-        int[] a = new int[size];
-        int[] b = new int[size];
-        int[] c = new int[size];
-        Arrays.fill(a, 3);
-        Arrays.fill(b, 7);
+        IntArray a = new IntArray(size);
+        IntArray b = new IntArray(size);
+        IntArray c = new IntArray(size);
+        a.init(3);
+        b.init(7);
 
         // Create TaskGraph WITHOUT placeholders (traditional approach)
         TaskGraph taskGraph = new TaskGraph("tg4") //
@@ -243,7 +245,7 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify results
         for (int i = 0; i < size; i++) {
-            assertEquals("c[" + i + "] should be 10", 10, c[i]);
+            assertEquals("c[" + i + "] should be 10", 10, c.get(i));
         }
     }
 
@@ -252,29 +254,29 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         final int size = 256;
 
         // First set of arrays
-        int[] a1 = new int[size];
-        int[] b1 = new int[size];
-        int[] c1 = new int[size];
-        Arrays.fill(a1, 2);
-        Arrays.fill(b1, 3);
+        IntArray a1 = new IntArray(size);
+        IntArray b1 = new IntArray(size);
+        IntArray c1 = new IntArray(size);
+        a1.init(2);
+        b1.init(3);
 
         // Second set of arrays
-        int[] a2 = new int[size];
-        int[] b2 = new int[size];
-        int[] c2 = new int[size];
-        Arrays.fill(a2, 5);
-        Arrays.fill(b2, 7);
+        IntArray a2 = new IntArray(size);
+        IntArray b2 = new IntArray(size);
+        IntArray c2 = new IntArray(size);
+        a2.init(5);
+        b2.init(7);
 
         // Create TaskGraph with transfer directive placeholders
         TaskGraph taskGraph = new TaskGraph("tg5") //
                 .transferToDevice(DataTransferMode.FIRST_EXECUTION, //
-                        Param.in("input1", int[].class), //
-                        Param.in("input2", int[].class)) //
+                        Param.in("input1", IntArray.class), //
+                        Param.in("input2", IntArray.class)) //
                 .task("t0", TestPlaceholderRuntimeBinding::vectorAdd, //
-                        Param.in("input1", int[].class), //
-                        Param.in("input2", int[].class), //
-                        Param.out("output", int[].class)) //
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("output", int[].class));
+                        Param.in("input1", IntArray.class), //
+                        Param.in("input2", IntArray.class), //
+                        Param.out("output", IntArray.class)) //
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("output", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -284,7 +286,7 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify: 2 + 3 = 5
         for (int i = 0; i < size; i++) {
-            assertEquals("c1[" + i + "] should be 5", 5, c1[i]);
+            assertEquals("c1[" + i + "] should be 5", 5, c1.get(i));
         }
 
         // Second execution
@@ -292,7 +294,7 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
 
         // Verify: 5 + 7 = 12
         for (int i = 0; i < size; i++) {
-            assertEquals("c2[" + i + "] should be 12", 12, c2[i]);
+            assertEquals("c2[" + i + "] should be 12", 12, c2.get(i));
         }
     }
 
@@ -301,28 +303,28 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         final int size = 256;
 
         // Arrays for first execution
-        int[] a1 = new int[size];
-        int[] b1 = new int[size];
-        Arrays.fill(a1, 1);
-        Arrays.fill(b1, 2);
+        IntArray a1 = new IntArray(size);
+        IntArray b1 = new IntArray(size);
+        a1.init(1);
+        b1.init(2);
 
         // Arrays for second execution
-        int[] a2 = new int[size];
-        int[] b2 = new int[size];
-        Arrays.fill(a2, 10);
-        Arrays.fill(b2, 20);
+        IntArray a2 = new IntArray(size);
+        IntArray b2 = new IntArray(size);
+        a2.init(10);
+        b2.init(20);
 
         // Create TaskGraph with two tasks
         TaskGraph taskGraph = new TaskGraph("tg6") //
                 .task("t0", TestPlaceholderRuntimeBinding::scalarAdd, //
-                        Param.in("input", int[].class), //
+                        Param.in("input", IntArray.class), //
                         5, // constant scalar
-                        Param.out("temp", int[].class)) //
+                        Param.out("temp", IntArray.class)) //
                 .task("t1", TestPlaceholderRuntimeBinding::scalarAdd, //
-                        Param.in("temp", int[].class), //
+                        Param.in("temp", IntArray.class), //
                         10, // constant scalar
-                        Param.out("output", int[].class)) //
-                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("output", int[].class));
+                        Param.out("output", IntArray.class)) //
+                .transferToHost(DataTransferMode.EVERY_EXECUTION, Param.out("output", IntArray.class));
 
         ImmutableTaskGraph immutableTaskGraph = taskGraph.snapshot();
         TornadoExecutionPlan executionPlan = new TornadoExecutionPlan(immutableTaskGraph);
@@ -331,14 +333,14 @@ public class TestPlaceholderRuntimeBinding extends TornadoTestBase {
         executionPlan.execute(Args.of("input", a1).and("temp", b1).and("output", a1).build());
 
         for (int i = 0; i < size; i++) {
-            assertEquals("a1[" + i + "] should be 16", 16, a1[i]);
+            assertEquals("a1[" + i + "] should be 16", 16, a1.get(i));
         }
 
         // Second execution: input=a2(10), temp=b2, output=a2 => result: 10+5+10=25
         executionPlan.execute(Args.of("input", a2).and("temp", b2).and("output", a2).build());
 
         for (int i = 0; i < size; i++) {
-            assertEquals("a2[" + i + "] should be 25", 25, a2[i]);
+            assertEquals("a2[" + i + "] should be 25", 25, a2.get(i));
         }
     }
 }
