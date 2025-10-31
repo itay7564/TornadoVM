@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import uk.ac.manchester.tornado.api.common.PlaceholderRef;
 import uk.ac.manchester.tornado.api.common.SchedulableTask;
 import uk.ac.manchester.tornado.api.common.TaskPackage;
 import uk.ac.manchester.tornado.api.common.TornadoDevice;
@@ -143,4 +144,6 @@ public interface TornadoTaskGraphInterface extends ProfilerInterface {
     void setLastExecutedTaskGraph(TornadoTaskGraphInterface lastExecutedTaskGraph);
 
     boolean isGridRegistered();
+
+    void setPlaceholderSchema(Map<String, List<PlaceholderRef>> schema);
 }

@@ -70,6 +70,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1> TaskGraphInterface task(String id, Task1<T1> code, T1 arg);
+    
+    /** Adds task with one parameter (Param version). */
+    <T1> TaskGraphInterface task(String id, Task1<T1> code, Param<T1> arg);
 
     /**
      * Adds task with two parameters.
@@ -85,6 +88,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2> TaskGraphInterface task(String id, Task2<T1, T2> code, T1 arg1, T2 arg2);
+    
+    /** Adds task with two parameters (Param version). */
+    <T1, T2> TaskGraphInterface task(String id, Task2<T1, T2> code, Param<T1> arg1, Param<T2> arg2);
 
     /**
      * Add task with three parameters.
@@ -102,6 +108,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2, T3> TaskGraphInterface task(String id, Task3<T1, T2, T3> code, T1 arg1, T2 arg2, T3 arg3);
+    
+    /** Add task with three parameters (Param version). */
+    <T1, T2, T3> TaskGraphInterface task(String id, Task3<T1, T2, T3> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3);
 
     /**
      * Adds task with four parameters.
@@ -121,6 +130,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2, T3, T4> TaskGraphInterface task(String id, Task4<T1, T2, T3, T4> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4);
+
+    /** Adds task with 4 parameters (Param version). */
+    <T1, T2, T3, T4> TaskGraphInterface task(String id, Task4<T1, T2, T3, T4> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4);
 
     /**
      * Adds task with five parameters.
@@ -142,6 +154,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2, T3, T4, T5> TaskGraphInterface task(String id, Task5<T1, T2, T3, T4, T5> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5);
+
+    /** Adds task with 5 parameters (Param version). */
+    <T1, T2, T3, T4, T5> TaskGraphInterface task(String id, Task5<T1, T2, T3, T4, T5> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5);
 
     /**
      * Adds task with six parameters.
@@ -165,6 +180,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2, T3, T4, T5, T6> TaskGraphInterface task(String id, Task6<T1, T2, T3, T4, T5, T6> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6);
+
+    /** Adds task with 6 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6> TaskGraphInterface task(String id, Task6<T1, T2, T3, T4, T5, T6> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6);
 
     /**
      * Adds task with seven parameters.
@@ -190,6 +208,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2, T3, T4, T5, T6, T7> TaskGraphInterface task(String id, Task7<T1, T2, T3, T4, T5, T6, T7> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7);
+
+    /** Adds task with 7 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7> TaskGraphInterface task(String id, Task7<T1, T2, T3, T4, T5, T6, T7> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7);
 
     /**
      * Adds task with eight parameters.
@@ -217,6 +238,9 @@ public interface TaskGraphInterface {
      * @return {@link TaskGraphInterface}
      */
     <T1, T2, T3, T4, T5, T6, T7, T8> TaskGraphInterface task(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8);
+
+    /** Adds task with 8 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8> TaskGraphInterface task(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8);
 
     /**
      * Adds task with nine parameters.
@@ -247,6 +271,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskGraphInterface task(String id, Task9<T1, T2, T3, T4, T5, T6, T7, T8, T9> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8,
             T9 arg9);
+    
+    /** Adds task with 9 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9> TaskGraphInterface task(String id, Task9<T1, T2, T3, T4, T5, T6, T7, T8, T9> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8,
+            Param<T9> arg9);
 
     /**
      * Adds task with 10 parameters.
@@ -279,6 +307,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskGraphInterface task(String id, Task10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7,
             T8 arg8, T9 arg9, T10 arg10);
+    
+    /** Adds task with 10 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> TaskGraphInterface task(String id, Task10<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7,
+            Param<T8> arg8, Param<T9> arg9, Param<T10> arg10);
 
     /**
      * It creates a task with 11 parameters.
@@ -313,6 +345,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskGraphInterface task(String id, TornadoFunctions.Task11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4,
             T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11);
+    
+    /** Adds task with 11 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> TaskGraphInterface task(String id, TornadoFunctions.Task11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4,
+            Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8, Param<T9> arg9, Param<T10> arg10, Param<T11> arg11);
 
     /**
      * It creates a task with 12 parameters.
@@ -349,6 +385,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskGraphInterface task(String id, TornadoFunctions.Task12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> code, T1 arg1, T2 arg2, T3 arg3,
             T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12);
+    
+    /** Adds task with 12 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> TaskGraphInterface task(String id, TornadoFunctions.Task12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3,
+            Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8, Param<T9> arg9, Param<T10> arg10, Param<T11> arg11, Param<T12> arg12);
 
     /**
      * It creates a task with 13 parameters.
@@ -387,6 +427,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> TaskGraphInterface task(String id, TornadoFunctions.Task13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> code, T1 arg1, T2 arg2,
             T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13);
+    
+    /** Adds task with 13 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> TaskGraphInterface task(String id, TornadoFunctions.Task13<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13> code, Param<T1> arg1, Param<T2> arg2,
+            Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8, Param<T9> arg9, Param<T10> arg10, Param<T11> arg11, Param<T12> arg12, Param<T13> arg13);
 
     /**
      * It creates a task with 14 parameters.
@@ -427,6 +471,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> TaskGraphInterface task(String id, TornadoFunctions.Task14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> code, T1 arg1,
             T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14);
+    
+    /** Adds task with 14 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> TaskGraphInterface task(String id, TornadoFunctions.Task14<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14> code, Param<T1> arg1,
+            Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8, Param<T9> arg9, Param<T10> arg10, Param<T11> arg11, Param<T12> arg12, Param<T13> arg13, Param<T14> arg14);
 
     /**
      * It creates a task with 15 parameters.
@@ -469,6 +517,10 @@ public interface TaskGraphInterface {
      */
     <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> TaskGraphInterface task(String id, Task15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> code, T1 arg1,
             T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7, T8 arg8, T9 arg9, T10 arg10, T11 arg11, T12 arg12, T13 arg13, T14 arg14, T15 arg15);
+    
+    /** Adds task with 15 parameters (Param version). */
+    <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> TaskGraphInterface task(String id, Task15<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15> code, Param<T1> arg1,
+            Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6, Param<T7> arg7, Param<T8> arg8, Param<T9> arg9, Param<T10> arg10, Param<T11> arg11, Param<T12> arg12, Param<T13> arg13, Param<T14> arg14, Param<T15> arg15);
 
     TaskGraphInterface prebuiltTask(String id, String entryPoint, String filename, AccessorParameters accessorParameters);
 
