@@ -153,7 +153,7 @@ public class TaskPackage {
         return new TaskPackage(id, code);
     }
 
-    public static <T1> TaskPackage createPackage(String id, Task1<T1> code, T1 arg) {
+    public static <T1> TaskPackage createPackage(String id, Task1<T1> code, Param<T1> arg) {
         return new TaskPackage(id, code, arg);
     }
 
@@ -181,8 +181,8 @@ public class TaskPackage {
         return new TaskPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
     }
 
-    public static <T1, T2, T3, T4, T5, T6, T7, T8> TaskPackage createPackage(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6, T7 arg7,
-            T8 arg8) {
+    public static <T1, T2, T3, T4, T5, T6, T7, T8> TaskPackage createPackage(String id, Task8<T1, T2, T3, T4, T5, T6, T7, T8> code, Param<T1> arg1, Param<T2> arg2, Param<T3> arg3, Param<T4> arg4, Param<T5> arg5, Param<T6> arg6,
+                                                                             Param<T7> arg7, Param<T8> arg8) {
         return new TaskPackage(id, code, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
     }
 
